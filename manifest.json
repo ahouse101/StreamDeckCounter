@@ -1,0 +1,39 @@
+{
+  "Actions": [
+    {
+      "Icon": "actionIcon",
+      "Name": "Logger",
+      "States": [
+        {
+          "Image": "actionDefaultImage",
+          "TitleAlignment": "middle",
+          "FontSize": "16"
+        }
+      ],
+      "SupportedInMultiActions": false,
+      "Tooltip": "Keep a single counter.",
+      "UUID": "house.alex.counter.action"
+    }
+  ],
+  "SDKVersion": 2,
+  "Author": "Alex House",
+  "CodePath": "index.html",
+  "Description": "My version of Elgato's 'Counter' demo app, which is basically the same except for (hopefully) better formatted code.",
+  "Name": "Logger",
+  "Icon": "pluginIcon",
+  "URL": "http://alex.house/",
+  "Version": "0.1",
+  "OS": [
+    {
+      "Platform": "mac",
+      "MinimumVersion": "10.11"
+    },
+    {
+      "Platform": "windows",
+      "MinimumVersion": "10"
+    }
+  ],
+  "Software": {
+    "MinimumVersion": "4.1"
+  }
+}

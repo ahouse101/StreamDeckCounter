@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>house.alex.counter</title>
+		<meta charset="utf-8" />
+	</head>
+
+	<body>
+		<script>
+			var websocket = null;
+			var pluginUUID = null;
+			var DestinationEnum = Object.freeze({
+				"HARDWARE_AND_SOFTWARE": 0,
+				"HARDWARE_ONLY": 1,
+				"SOFTWARE_ONLY": 2
+			});
+			var timer;
+			var counterAction = {
+				type: "house.alex.counter.action",
+				onKeyDown: function(context, settings, coordinates, userDesiredState) {
+					timer = setTimeout(function () {
+						var updatedSettings = {};
+						updatedSettings["keyPressCounter"] = -1;
+
+						counterAction.setSettings(context, updatedSettings);
+						counterAction.setTitle(context, 0);
+					}, 1500);
+				},
+				onKeyUp: function(context, settings, coordinates, userDesiredState) {
+					clearTimeout(timer);
+					var keyPressCounter = 0;
+					if (settings != null && settings.hasOwnProperty('keyPressCounter')) {
+						keyPressCounter = settings["keyPressCounter"];
+					}
+
+					keyPressCounter++;
+
+					updatedSettings = {};
+					updatedSettings["keyPressCounter"] = keyPressCounter;
+
+					this.setSettings(context, updatedSettings);
+
+					this.setTitle(context, keyPressCounter);
+				},
+				onWillAppear: function(context, settings, coordinates) {
+					var keyPressCounter = 0;
+					if (settings != null && settings.hasOwnProperty('keyPressCounter')){
+						keyPressCounter = settings["keyPressCounter"];
+					}
+					this.setTitle(context, keyPressCounter);
+				},
+				setTitle: function(context, keyPressCounter) {
+					websocket.send(JSON.stringify({
+						"event": "setTitle",
+						"context": context,
+						"payload": {
+							"title": "" + keyPressCounter,
+							"target": DestinationEnum.HARDWARE_AND_SOFTWARE
+						}
+					}));
+				},
+				setSettings: function(context, settings) {
+					websocket.send(JSON.stringify({
+						"event": "setSettings",
+						"context": context,
+						"payload": settings
+					}));
+				}
+			}
+
+			function connectElgatoStreamDeckSocket(port, pluginUUID, registerEvent, info) {
+				// Open a web socket to the Stream Deck software.
+				websocket = new WebSocket("ws://127.0.0.1:" + port);
+
+				websocket.onopen = () => {
+					// WebSocket is connected, send registration message.
+					websocket.send(JSON.stringify({
+						"event": registerEvent,
+						"uuid": pluginUUID
+					}));
+					// Once the plugin has registered with the Stream Deck software, it will start to recieve
+					// messages about various events.
+				};
+
+				// Process a message recieved from the Stream Deck.
+				websocket.onmessage = (event) => {
+					var data = JSON.parse(event.data);
+
+					if (event == "keyDown") dispatchOnMessage(data.context, 'onKeyDown', data.payload);
+					else if (event == "keyUp") dispatchOnMessage(data.context, 'onKeyUp', data.payload);
+					else if (event == "willAppear") dispatchOnMessage(data.context, 'onWillAppear', data.payload);
+				}
+			}
+
+			function dispatchOnMessage(context, functionName, payload) {
+				counterAction[functionName](
+					context,
+					payload.settings,
+					payload.coordinates,
+					payload.userDesiredState
+				);
+			}
+		</script>
+	</body>
+</html>
